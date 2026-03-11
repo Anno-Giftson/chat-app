@@ -2,6 +2,67 @@ let users = JSON.parse(localStorage.getItem("users") || "{}")
 let chats = JSON.parse(localStorage.getItem("chats") || "{}")
 let currentUser = localStorage.getItem("currentUser")
 
+// Add this near the top of script.js
+window.sendMessage = function(){
+    if(!currentUser) return;
+
+    const friend = localStorage.getItem("chatFriend");
+    if(!friend) return;
+
+    const chatBox = document.getElementById("chatBox");
+    const input = document.getElementById("messageInput");
+    const text = input.value.trim();
+    if(!text) return;
+
+    const chatId = [currentUser, friend].sort().join("_");
+    if(!chats[chatId]) chats[chatId] = [];
+
+    chats[chatId].push({ sender: currentUser, text });
+    save();
+    input.value = "";
+
+    renderChat(); // Make sure you have this function globally
+}
+
+function renderChat(){
+    const friend = localStorage.getItem("chatFriend");
+    if(!friend) return;
+
+    const chatBox = document.getElementById("chatBox");
+    const chatId = [currentUser, friend].sort().join("_");
+    if(!chats[chatId]) chats[chatId] = [];
+
+    chatBox.innerHTML = "";
+
+    chats[chatId].forEach((m, i) => {
+        const div = document.createElement("div");
+        div.className = "bubble";
+        if(m.sender === currentUser) div.classList.add("me");
+        div.innerText = `${m.sender}: ${m.text}`;
+
+        if(m.sender === currentUser){
+            const del = document.createElement("button");
+            del.innerText = "🗑";
+            del.onclick = () => {
+                chats[chatId].splice(i,1);
+                save();
+                renderChat();
+            }
+            div.appendChild(del);
+        }
+
+        chatBox.appendChild(div);
+    });
+
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+if(window.location.pathname.endsWith("chat.html")){
+    currentUser = localStorage.getItem("currentUser");
+    renderChat();
+    setInterval(renderChat, 1000);
+}
+
 function save(){
 localStorage.setItem("users",JSON.stringify(users))
 localStorage.setItem("chats",JSON.stringify(chats))
@@ -334,4 +395,11 @@ function deleteAccount(){
 
     alert("Account deleted!");
     location.reload();
+}
+
+const inputField = document.getElementById("messageInput");
+if(inputField){
+    inputField.addEventListener("keypress", function(e){
+        if(e.key === "Enter") sendMessage();
+    });
 }
