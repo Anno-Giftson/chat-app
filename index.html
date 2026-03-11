@@ -1,46 +1,97 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
-<title>CodeChat - Browser Version</title>
+<title>CodeChat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<h1>CodeChat (Browser Version)</h1>
 
-<!-- SIGNUP -->
-<div id="signup">
-  <h2>Sign Up</h2>
-  <input id="username" placeholder="Enter username">
-  <button onclick="signup()">Sign Up</button>
-  <div class="msgBox" id="signupMsg"></div>
-  <p id="signupCode"></p>
+<body>
+
+<h1>CodeChat</h1>
+
+<!-- SIGN UP -->
+<div id="signupBox" class="card">
+
+<h2>Sign Up</h2>
+
+<input id="signupUser" placeholder="Username">
+<input id="signupPass" type="password" placeholder="Password">
+
+<button onclick="signup()">Create Account</button>
+
+<div id="signupMsg" class="msg"></div>
+
 </div>
+
 
 <!-- LOGIN -->
-<div id="login">
-  <h2>Login</h2>
-  <input id="loginUsername" placeholder="Username">
-  <button onclick="login()">Login</button>
-  <div class="msgBox" id="loginMsg"></div>
+<div id="loginBox" class="card">
+
+<h2>Login</h2>
+
+<input id="loginUser" placeholder="Username">
+<input id="loginPass" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+<button onclick="forgotPassword()" class="secondaryBtn">
+Forgot Password
+</button>
+
+<div id="loginMsg" class="msg"></div>
+
 </div>
 
-<!-- FRIEND SECTION -->
-<div id="friendSection" style="display:none;">
-  <h2>Add Friend</h2>
-  <input id="friendCodeInput" placeholder="Enter friend's code">
-  <button onclick="sendFriendRequest()">Send Request</button>
-  <div class="msgBox" id="friendMsg"></div>
 
-  <h3>Friend Requests:</h3>
-  <ul id="friendRequests"></ul>
 
-  <h3>Friends:</h3>
-  <ul id="friendsList"></ul>
+<!-- MAIN APP -->
+<div id="mainUI" style="display:none">
 
-  <button onclick="deleteAccount()" style="background-color:#f44336;">Delete Account</button>
+<div class="topBar">
+
+<span id="welcomeText"></span>
+
+<button onclick="logout()" class="dangerBtn">
+Logout
+</button>
+
 </div>
+
+
+<div class="myCode">
+
+Your friend code: <b id="myCode"></b>
+
+</div>
+
+
+<h3>Add Friend</h3>
+
+<input id="friendCodeInput" placeholder="Enter friend code">
+
+<button onclick="sendFriendRequest()">Send Request</button>
+
+<div id="friendMsg" class="msg"></div>
+
+
+
+<h3>Friend Requests</h3>
+
+<ul id="requestsList"></ul>
+
+
+
+<h3>Friends</h3>
+
+<ul id="friendsList"></ul>
+
+</div>
+
 
 <script src="script.js"></script>
+
 </body>
 </html>
