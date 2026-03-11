@@ -2,15 +2,15 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Code Chat</title>
+<title>CodeChat - Browser Only</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>CodeChat</h1>
+<h1>CodeChat (Browser Version)</h1>
 
 <div id="signup">
   <h2>Sign Up</h2>
-  <input id="username" placeholder="Username">
+  <input id="username" placeholder="Enter username">
   <button onclick="signup()">Sign Up</button>
   <p id="signupCode"></p>
 </div>
@@ -23,7 +23,7 @@
 
 <div id="friendSection" style="display:none;">
   <h2>Add Friend</h2>
-  <input id="friendCodeInput" placeholder="Enter friend code">
+  <input id="friendCodeInput" placeholder="Enter friend's code">
   <button onclick="sendFriendRequest()">Send Request</button>
 
   <h3>Friend Requests:</h3>
@@ -33,7 +33,6 @@
   <ul id="friendsList"></ul>
 </div>
 
-<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
