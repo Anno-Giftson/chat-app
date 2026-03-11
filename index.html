@@ -2,36 +2,43 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>CodeChat - Browser Only</title>
+<title>CodeChat - Browser Version</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <h1>CodeChat (Browser Version)</h1>
 
+<!-- SIGNUP -->
 <div id="signup">
   <h2>Sign Up</h2>
   <input id="username" placeholder="Enter username">
   <button onclick="signup()">Sign Up</button>
+  <div class="msgBox" id="signupMsg"></div>
   <p id="signupCode"></p>
 </div>
 
+<!-- LOGIN -->
 <div id="login">
   <h2>Login</h2>
   <input id="loginUsername" placeholder="Username">
   <button onclick="login()">Login</button>
+  <div class="msgBox" id="loginMsg"></div>
 </div>
 
+<!-- FRIEND SECTION -->
 <div id="friendSection" style="display:none;">
   <h2>Add Friend</h2>
   <input id="friendCodeInput" placeholder="Enter friend's code">
   <button onclick="sendFriendRequest()">Send Request</button>
-  <button onclick="deleteAccount()" style="background-color:#f44336;">Delete Account</button>
+  <div class="msgBox" id="friendMsg"></div>
 
   <h3>Friend Requests:</h3>
   <ul id="friendRequests"></ul>
 
   <h3>Friends:</h3>
   <ul id="friendsList"></ul>
+
+  <button onclick="deleteAccount()" style="background-color:#f44336;">Delete Account</button>
 </div>
 
 <script src="script.js"></script>
