@@ -308,3 +308,30 @@ render()
 if(currentUser){
 openMain()
 }
+
+function deleteAccount(){
+    if(!currentUser) return showMsg("friendMsg","No user logged in");
+
+    if(!confirm("Are you sure you want to delete your account? This cannot be undone.")) return;
+
+    // Remove user from other users' friends & requests
+    for(let u in users){
+        users[u].friends = users[u].friends.filter(f => f !== currentUser);
+        users[u].requests = users[u].requests.filter(r => r !== currentUser);
+    }
+
+    // Remove user’s chats
+    for(let chatId in chats){
+        if(chatId.includes(currentUser)) delete chats[chatId];
+    }
+
+    // Delete user
+    delete users[currentUser];
+    save();
+
+    localStorage.removeItem("currentUser");
+    currentUser = null;
+
+    alert("Account deleted!");
+    location.reload();
+}
