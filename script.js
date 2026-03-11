@@ -125,6 +125,13 @@ if (window.location.pathname.endsWith('chat.html')) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+// Auto-refresh chat every 1 second (1000 ms)
+setInterval(() => {
+    // Reload chats from localStorage in case your friend added a message
+    chats = JSON.parse(localStorage.getItem('chats') || '{}');
+    renderChat();
+}, 1000);
+
 function deleteMessage(index) {
     if (confirm('Are you sure you want to delete this message?')) {
         chats[chatId].splice(index, 1); // remove message from array
