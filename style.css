@@ -3,3 +3,4 @@ input { margin:5px; }
 button { margin-left:5px; }
 ul { list-style:none; padding:0; }
 li { margin:5px 0; }
+p.message { margin:2px 0; }
