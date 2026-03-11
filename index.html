@@ -2,30 +2,38 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Code-Based Chat</title>
+<title>Code Chat</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<h1>Welcome to CodeChat</h1>
+<h1>CodeChat</h1>
 
 <div id="signup">
   <h2>Sign Up</h2>
-  <input type="text" id="username" placeholder="Enter username">
+  <input id="username" placeholder="Username">
   <button onclick="signup()">Sign Up</button>
+  <p id="signupCode"></p>
 </div>
 
 <div id="login">
   <h2>Login</h2>
-  <input type="text" id="loginUsername" placeholder="Enter username">
+  <input id="loginUsername" placeholder="Username">
   <button onclick="login()">Login</button>
 </div>
 
-<div id="friendCode">
+<div id="friendSection" style="display:none;">
   <h2>Add Friend</h2>
-  <input type="text" id="friendCodeInput" placeholder="Enter friend's code">
+  <input id="friendCodeInput" placeholder="Enter friend code">
   <button onclick="sendFriendRequest()">Send Request</button>
+
+  <h3>Friend Requests:</h3>
+  <ul id="friendRequests"></ul>
+
+  <h3>Friends:</h3>
+  <ul id="friendsList"></ul>
 </div>
 
+<script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
 <script src="script.js"></script>
 </body>
 </html>
