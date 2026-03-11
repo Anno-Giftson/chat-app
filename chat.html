@@ -1,21 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
 <meta charset="UTF-8">
-<title>Chat</title>
+<title>CodeChat - Chat</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="style.css">
 </head>
-<body>
-<h1>Chat with <span id="friendName"></span></h1>
 
-<div class="chat-container">
-    <div id="chatBox"></div>
-    <div class="chat-input-container">
-        <input id="messageInput" placeholder="Type a message">
-        <button onclick="sendMessage()">Send</button>
-    </div>
+<body>
+
+<h1>CodeChat</h1>
+
+<div class="topBar">
+
+<button onclick="goBack()">⬅ Back</button>
+
+<span id="chatFriendName"></span>
+
+<button onclick="logout()" class="dangerBtn">Logout</button>
+
 </div>
 
+
+<div id="chatBox"></div>
+
+
+<div class="chatInput">
+
+<input id="messageInput" placeholder="Type a message">
+
+<button onclick="sendMessage()">Send</button>
+
+</div>
+
+
 <script src="script.js"></script>
+
 </body>
+
 </html>
