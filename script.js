@@ -105,15 +105,25 @@ if (window.location.pathname.endsWith('chat.html')) {
     if (!chats[chatId]) chats[chatId] = [];
 
     function renderChat() {
-        chatBox.innerHTML = '';
-        chats[chatId].forEach(m => {
-            const p = document.createElement('p');
-            p.className = 'message';
-            p.innerText = `${m.sender}: ${m.text}`;
-            chatBox.appendChild(p);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+    chatBox.innerHTML = '';
+    chats[chatId].forEach((m, index) => {
+        const p = document.createElement('p');
+        p.className = 'message';
+        p.innerText = `${m.sender}: ${m.text}`;
+
+        // Only show delete button for messages sent by currentUser
+        if (m.sender === currentUser) {
+            const btn = document.createElement('button');
+            btn.innerText = 'Delete';
+            btn.style.marginLeft = '10px';
+            btn.onclick = () => deleteMessage(index);
+            p.appendChild(btn);
+        }
+
+        chatBox.appendChild(p);
+    });
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
 
     window.sendMessage = function() {
         const input = document.getElementById('messageInput');
