@@ -1,4 +1,4 @@
-// Browser-only storage
+// ======== STORAGE ========
 let users = JSON.parse(localStorage.getItem('users') || '{}');
 let chats = JSON.parse(localStorage.getItem('chats') || '{}');
 let currentUser = localStorage.getItem('currentUser') || null;
@@ -8,69 +8,52 @@ function saveData() {
     localStorage.setItem('chats', JSON.stringify(chats));
 }
 
-// Utility to generate code
+// ======== HELPER ========
 function generateCode() {
     return Math.random().toString(36).substring(2, 8).toUpperCase();
 }
 
-// Sign up
+function showMsg(msg, type='info', target='loginMsg') {
+    const box = document.getElementById(target);
+    if (!box) return;
+    box.innerText = msg;
+    box.style.color = type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#333';
+    box.style.fontWeight = 'bold';
+    setTimeout(() => { box.innerText = ''; }, 4000);
+}
+
+// ======== SIGNUP ========
 function signup() {
     const username = document.getElementById('username').value.trim();
-    if (!username) return alert('Enter username');
-    if (users[username]) return alert('Username exists');
+    if (!username) return showMsg('Enter a username', 'error', 'signupMsg');
+    if (users[username]) return showMsg('Username exists', 'error', 'signupMsg');
+
     const code = generateCode();
     users[username] = { code, friends: [], friendRequests: [] };
     saveData();
+
+    showMsg(`Signup successful! Your code: ${code}`, 'success', 'signupMsg');
     document.getElementById('signupCode').innerText = `Your code: ${code}`;
 }
 
-// Login
+// ======== LOGIN ========
 function login() {
     const username = document.getElementById('loginUsername').value.trim();
-    if (!users[username]) return alert('User not found');
+    if (!users[username]) return showMsg('User not found', 'error', 'loginMsg');
+
     currentUser = username;
     localStorage.setItem('currentUser', currentUser);
     document.getElementById('friendSection').style.display = 'block';
+    showMsg(`Logged in as ${username}`, 'success', 'loginMsg');
     loadUserData();
 }
 
-function deleteAccount() {
-    if (!currentUser) return alert('No user logged in');
-    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
-
-    // 1. Remove user from users object
-    delete users[currentUser];
-
-    // 2. Remove this user from friends lists and friendRequests of other users
-    for (let user in users) {
-        users[user].friends = users[user].friends.filter(f => f !== currentUser);
-        users[user].friendRequests = users[user].friendRequests.filter(f => f !== currentUser);
-    }
-
-    // 3. Remove all chats that involve this user
-    for (let chatId in chats) {
-        if (chatId.includes(currentUser)) {
-            delete chats[chatId];
-        }
-    }
-
-    // 4. Save changes to localStorage
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('chats', JSON.stringify(chats));
-    localStorage.removeItem('currentUser');
-    currentUser = null;
-
-    alert('Account deleted successfully!');
-
-    // Reload page to show signup/login again
-    location.reload();
-}
-
-// Load friend requests and friends
+// ======== FRIENDS & REQUESTS ========
 function loadUserData() {
     if (!currentUser) return;
     const user = users[currentUser];
 
+    // Friend requests
     const frList = document.getElementById('friendRequests');
     frList.innerHTML = '';
     user.friendRequests.forEach(f => {
@@ -83,36 +66,45 @@ function loadUserData() {
         frList.appendChild(li);
     });
 
+    // Friends list
     const fList = document.getElementById('friendsList');
     fList.innerHTML = '';
     user.friends.forEach(f => {
         const li = document.createElement('li');
         li.innerText = f;
-        const btn = document.createElement('button');
-        btn.innerText = 'Chat';
-        btn.onclick = () => openChat(f);
-        li.appendChild(btn);
+
+        const chatBtn = document.createElement('button');
+        chatBtn.innerText = 'Chat';
+        chatBtn.onclick = () => openChat(f);
+        chatBtn.style.marginRight = '5px';
+
+        const delBtn = document.createElement('button');
+        delBtn.innerText = 'Delete';
+        delBtn.style.backgroundColor = '#f44336';
+        delBtn.onclick = () => deleteFriend(f);
+
+        li.appendChild(chatBtn);
+        li.appendChild(delBtn);
         fList.appendChild(li);
     });
 }
 
-// Send friend request
 function sendFriendRequest() {
     const code = document.getElementById('friendCodeInput').value.trim();
     let found = false;
+
     for (let user in users) {
-        if (users[user].code === code) {
+        if (users[user].code === code && user !== currentUser) {
             users[user].friendRequests.push(currentUser);
             saveData();
-            alert('Friend request sent!');
+            showMsg(`Friend request sent to ${user}`, 'success', 'friendMsg');
             found = true;
             break;
         }
     }
-    if (!found) alert('Code not found');
+    if (!found) showMsg('Code not found', 'error', 'friendMsg');
 }
 
-// Accept friend
 function acceptFriend(friend) {
     users[currentUser].friends.push(friend);
     users[friend].friends.push(currentUser);
@@ -121,13 +113,49 @@ function acceptFriend(friend) {
     loadUserData();
 }
 
-// Open chat
+function deleteFriend(friend) {
+    if (!confirm(`Are you sure you want to remove ${friend} from your friends?`)) return;
+    users[currentUser].friends = users[currentUser].friends.filter(f => f !== friend);
+    if (users[friend]) {
+        users[friend].friends = users[friend].friends.filter(f => f !== currentUser);
+    }
+    saveData();
+    showMsg(`${friend} removed from friends`, 'success', 'friendMsg');
+    loadUserData();
+}
+
+// ======== DELETE ACCOUNT ========
+function deleteAccount() {
+    if (!currentUser) return showMsg('No user logged in', 'error', 'friendMsg');
+    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+
+    delete users[currentUser];
+
+    for (let user in users) {
+        users[user].friends = users[user].friends.filter(f => f !== currentUser);
+        users[user].friendRequests = users[user].friendRequests.filter(f => f !== currentUser);
+    }
+
+    for (let chatId in chats) {
+        if (chatId.includes(currentUser)) delete chats[chatId];
+    }
+
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('chats', JSON.stringify(chats));
+    localStorage.removeItem('currentUser');
+    currentUser = null;
+
+    showMsg('Account deleted successfully!', 'success', 'friendMsg');
+    location.reload();
+}
+
+// ======== CHAT ========
 function openChat(friend) {
     localStorage.setItem('chatFriend', friend);
     window.location.href = 'chat.html';
 }
 
-// Chat functionality
+// Chat page logic
 if (window.location.pathname.endsWith('chat.html')) {
     const chatBox = document.getElementById('chatBox');
     const friend = localStorage.getItem('chatFriend');
@@ -137,45 +165,27 @@ if (window.location.pathname.endsWith('chat.html')) {
     if (!chats[chatId]) chats[chatId] = [];
 
     function renderChat() {
-    chatBox.innerHTML = '';
-    chats[chatId].forEach((m, index) => {
-        const p = document.createElement('p');
-        p.className = 'message';
-        p.innerText = `${m.sender}: ${m.text}`;
+        chatBox.innerHTML = '';
+        chats[chatId].forEach((m, index) => {
+            const p = document.createElement('p');
+            p.className = 'message';
+            p.innerText = `${m.sender}: ${m.text}`;
 
-        // Add friend class for messages from the other person
-        if (m.sender !== currentUser) {
-            p.classList.add('friend');
-        }
+            if (m.sender !== currentUser) p.classList.add('friend');
 
-        // Only show delete button for messages sent by currentUser
-        if (m.sender === currentUser) {
-            const btn = document.createElement('button');
-            btn.innerText = 'Delete';
-            btn.style.marginLeft = '10px';
-            btn.onclick = () => deleteMessage(index);
-            p.appendChild(btn);
-        }
+            if (m.sender === currentUser) {
+                const btn = document.createElement('button');
+                btn.innerText = '🗑';
+                btn.style.marginLeft = '10px';
+                btn.style.fontSize = '12px';
+                btn.onclick = () => deleteMessage(index);
+                p.appendChild(btn);
+            }
 
-        chatBox.appendChild(p);
-    });
-    chatBox.scrollTop = chatBox.scrollHeight;
-}
-
-// Auto-refresh chat every 1 second (1000 ms)
-setInterval(() => {
-    // Reload chats from localStorage in case your friend added a message
-    chats = JSON.parse(localStorage.getItem('chats') || '{}');
-    renderChat();
-}, 1000);
-
-function deleteMessage(index) {
-    if (confirm('Are you sure you want to delete this message?')) {
-        chats[chatId].splice(index, 1); // remove message from array
-        localStorage.setItem('chats', JSON.stringify(chats)); // save updated chats
-        renderChat(); // re-render chat instantly
+            chatBox.appendChild(p);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
     }
-}
 
     window.sendMessage = function() {
         const input = document.getElementById('messageInput');
@@ -187,5 +197,17 @@ function deleteMessage(index) {
         renderChat();
     }
 
+    function deleteMessage(index) {
+        chats[chatId].splice(index, 1);
+        saveData();
+        renderChat();
+    }
+
     renderChat();
+
+    // Auto-refresh every 1 second
+    setInterval(() => {
+        chats = JSON.parse(localStorage.getItem('chats') || '{}');
+        renderChat();
+    }, 1000);
 }
