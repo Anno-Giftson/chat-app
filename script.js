@@ -1,43 +1,81 @@
-// Demo storage
-let users = JSON.parse(localStorage.getItem('users') || '{}');
+const API = 'http://localhost:3000';
+let currentUser = null;
 
-function generateCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
-}
-
-function signup() {
+async function signup() {
     const username = document.getElementById('username').value.trim();
-    if (!username) return alert('Enter a username');
-
-    if (users[username]) return alert('Username already exists');
-
-    const code = generateCode();
-    users[username] = { code: code, friends: [], friendRequests: [] };
-    localStorage.setItem('users', JSON.stringify(users));
-    alert(`Signup successful! Your friend code is: ${code}`);
+    if (!username) return alert('Enter username');
+    const res = await fetch(`${API}/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })
+    });
+    const data = await res.json();
+    if (res.ok) document.getElementById('signupCode').innerText = `Your code: ${data.code}`;
+    else alert(data);
 }
 
-function login() {
+async function login() {
     const username = document.getElementById('loginUsername').value.trim();
-    if (!users[username]) return alert('User not found');
-    localStorage.setItem('currentUser', username);
-    alert('Logged in as ' + username);
+    if (!username) return alert('Enter username');
+    const res = await fetch(`${API}/user/${username}`);
+    if (!res.ok) return alert('User not found');
+    currentUser = username;
+    document.getElementById('friendSection').style.display = 'block';
+    loadUserData();
 }
 
-function sendFriendRequest() {
-    const friendCode = document.getElementById('friendCodeInput').value.trim();
-    const currentUser = localStorage.getItem('currentUser');
-    if (!currentUser) return alert('Login first');
+async function loadUserData() {
+    const res = await fetch(`${API}/user/${currentUser}`);
+    const data = await res.json();
 
-    let found = false;
-    for (let user in users) {
-        if (users[user].code === friendCode) {
-            users[user].friendRequests.push(currentUser);
-            localStorage.setItem('users', JSON.stringify(users));
-            alert('Friend request sent to ' + user);
-            found = true;
-            break;
-        }
-    }
-    if (!found) alert('Code not found');
+    // Friend requests
+    const frList = document.getElementById('friendRequests');
+    frList.innerHTML = '';
+    data.friendRequests.forEach(f => {
+        const li = document.createElement('li');
+        li.innerText = f;
+        const btn = document.createElement('button');
+        btn.innerText = 'Accept';
+        btn.onclick = () => acceptFriend(f);
+        li.appendChild(btn);
+        frList.appendChild(li);
+    });
+
+    // Friends
+    const fList = document.getElementById('friendsList');
+    fList.innerHTML = '';
+    data.friends.forEach(f => {
+        const li = document.createElement('li');
+        li.innerText = f;
+        const btn = document.createElement('button');
+        btn.innerText = 'Chat';
+        btn.onclick = () => openChat(f);
+        li.appendChild(btn);
+        fList.appendChild(li);
+    });
+}
+
+async function sendFriendRequest() {
+    const code = document.getElementById('friendCodeInput').value.trim();
+    const res = await fetch(`${API}/friend-request`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fromUser: currentUser, code })
+    });
+    if (res.ok) alert('Friend request sent');
+    else alert(await res.text());
+}
+
+async function acceptFriend(friend) {
+    const res = await fetch(`${API}/accept-friend`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser, friend })
+    });
+    if (res.ok) loadUserData();
+}
+
+function openChat(friend) {
+    localStorage.setItem('chatFriend', friend);
+    window.location.href = 'chat.html';
 }
