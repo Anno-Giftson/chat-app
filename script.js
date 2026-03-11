@@ -1,37 +1,47 @@
-const API = 'http://localhost:3000';
-let currentUser = null;
+// Browser-only storage
+let users = JSON.parse(localStorage.getItem('users') || '{}');
+let chats = JSON.parse(localStorage.getItem('chats') || '{}');
+let currentUser = localStorage.getItem('currentUser') || null;
 
-async function signup() {
-    const username = document.getElementById('username').value.trim();
-    if (!username) return alert('Enter username');
-    const res = await fetch(`${API}/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })
-    });
-    const data = await res.json();
-    if (res.ok) document.getElementById('signupCode').innerText = `Your code: ${data.code}`;
-    else alert(data);
+function saveData() {
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('chats', JSON.stringify(chats));
 }
 
-async function login() {
-    const username = document.getElementById('loginUsername').value.trim();
+// Utility to generate code
+function generateCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
+// Sign up
+function signup() {
+    const username = document.getElementById('username').value.trim();
     if (!username) return alert('Enter username');
-    const res = await fetch(`${API}/user/${username}`);
-    if (!res.ok) return alert('User not found');
+    if (users[username]) return alert('Username exists');
+    const code = generateCode();
+    users[username] = { code, friends: [], friendRequests: [] };
+    saveData();
+    document.getElementById('signupCode').innerText = `Your code: ${code}`;
+}
+
+// Login
+function login() {
+    const username = document.getElementById('loginUsername').value.trim();
+    if (!users[username]) return alert('User not found');
     currentUser = username;
+    localStorage.setItem('currentUser', currentUser);
     document.getElementById('friendSection').style.display = 'block';
     loadUserData();
 }
 
-async function loadUserData() {
-    const res = await fetch(`${API}/user/${currentUser}`);
-    const data = await res.json();
+// Load friend requests and friends
+function loadUserData() {
+    if (!currentUser) return;
+    const user = users[currentUser];
 
-    // Friend requests
     const frList = document.getElementById('friendRequests');
     frList.innerHTML = '';
-    data.friendRequests.forEach(f => {
+    user.friendRequests.forEach(f => {
         const li = document.createElement('li');
         li.innerText = f;
         const btn = document.createElement('button');
@@ -41,10 +51,9 @@ async function loadUserData() {
         frList.appendChild(li);
     });
 
-    // Friends
     const fList = document.getElementById('friendsList');
     fList.innerHTML = '';
-    data.friends.forEach(f => {
+    user.friends.forEach(f => {
         const li = document.createElement('li');
         li.innerText = f;
         const btn = document.createElement('button');
@@ -55,27 +64,66 @@ async function loadUserData() {
     });
 }
 
-async function sendFriendRequest() {
+// Send friend request
+function sendFriendRequest() {
     const code = document.getElementById('friendCodeInput').value.trim();
-    const res = await fetch(`${API}/friend-request`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fromUser: currentUser, code })
-    });
-    if (res.ok) alert('Friend request sent');
-    else alert(await res.text());
+    let found = false;
+    for (let user in users) {
+        if (users[user].code === code) {
+            users[user].friendRequests.push(currentUser);
+            saveData();
+            alert('Friend request sent!');
+            found = true;
+            break;
+        }
+    }
+    if (!found) alert('Code not found');
 }
 
-async function acceptFriend(friend) {
-    const res = await fetch(`${API}/accept-friend`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: currentUser, friend })
-    });
-    if (res.ok) loadUserData();
+// Accept friend
+function acceptFriend(friend) {
+    users[currentUser].friends.push(friend);
+    users[friend].friends.push(currentUser);
+    users[currentUser].friendRequests = users[currentUser].friendRequests.filter(f => f !== friend);
+    saveData();
+    loadUserData();
 }
 
+// Open chat
 function openChat(friend) {
     localStorage.setItem('chatFriend', friend);
     window.location.href = 'chat.html';
+}
+
+// Chat functionality
+if (window.location.pathname.endsWith('chat.html')) {
+    const chatBox = document.getElementById('chatBox');
+    const friend = localStorage.getItem('chatFriend');
+    currentUser = localStorage.getItem('currentUser');
+    document.getElementById('friendName').innerText = friend;
+    const chatId = [currentUser, friend].sort().join('_');
+    if (!chats[chatId]) chats[chatId] = [];
+
+    function renderChat() {
+        chatBox.innerHTML = '';
+        chats[chatId].forEach(m => {
+            const p = document.createElement('p');
+            p.className = 'message';
+            p.innerText = `${m.sender}: ${m.text}`;
+            chatBox.appendChild(p);
+        });
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    window.sendMessage = function() {
+        const input = document.getElementById('messageInput');
+        const text = input.value.trim();
+        if (!text) return;
+        chats[chatId].push({ sender: currentUser, text });
+        saveData();
+        input.value = '';
+        renderChat();
+    }
+
+    renderChat();
 }
