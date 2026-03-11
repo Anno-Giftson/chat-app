@@ -1,213 +1,310 @@
-// ======== STORAGE ========
-let users = JSON.parse(localStorage.getItem('users') || '{}');
-let chats = JSON.parse(localStorage.getItem('chats') || '{}');
-let currentUser = localStorage.getItem('currentUser') || null;
+let users = JSON.parse(localStorage.getItem("users") || "{}")
+let chats = JSON.parse(localStorage.getItem("chats") || "{}")
+let currentUser = localStorage.getItem("currentUser")
 
-function saveData() {
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('chats', JSON.stringify(chats));
+function save(){
+localStorage.setItem("users",JSON.stringify(users))
+localStorage.setItem("chats",JSON.stringify(chats))
 }
 
-// ======== HELPER ========
-function generateCode() {
-    return Math.random().toString(36).substring(2, 8).toUpperCase();
+function showMsg(id,msg,color="red"){
+let el=document.getElementById(id)
+if(!el) return
+el.innerText=msg
+el.style.color=color
+setTimeout(()=>el.innerText="",4000)
 }
 
-function showMsg(msg, type='info', target='loginMsg') {
-    const box = document.getElementById(target);
-    if (!box) return;
-    box.innerText = msg;
-    box.style.color = type === 'error' ? '#f44336' : type === 'success' ? '#4CAF50' : '#333';
-    box.style.fontWeight = 'bold';
-    setTimeout(() => { box.innerText = ''; }, 4000);
+function generateCode(){
+return Math.random().toString(36).substring(2,8).toUpperCase()
 }
 
-// ======== SIGNUP ========
-function signup() {
-    const username = document.getElementById('username').value.trim();
-    if (!username) return showMsg('Enter a username', 'error', 'signupMsg');
-    if (users[username]) return showMsg('Username exists', 'error', 'signupMsg');
+function signup(){
 
-    const code = generateCode();
-    users[username] = { code, friends: [], friendRequests: [] };
-    saveData();
+let u=document.getElementById("signupUser").value.trim()
+let p=document.getElementById("signupPass").value.trim()
 
-    showMsg(`Signup successful! Your code: ${code}`, 'success', 'signupMsg');
-    document.getElementById('signupCode').innerText = `Your code: ${code}`;
+if(!u || !p){
+showMsg("signupMsg","Fill all fields")
+return
 }
 
-// ======== LOGIN ========
-function login() {
-    const username = document.getElementById('loginUsername').value.trim();
-    if (!users[username]) return showMsg('User not found', 'error', 'loginMsg');
-
-    currentUser = username;
-    localStorage.setItem('currentUser', currentUser);
-    document.getElementById('friendSection').style.display = 'block';
-    showMsg(`Logged in as ${username}`, 'success', 'loginMsg');
-    loadUserData();
+if(users[u]){
+showMsg("signupMsg","Username already exists")
+return
 }
 
-// ======== FRIENDS & REQUESTS ========
-function loadUserData() {
-    if (!currentUser) return;
-    const user = users[currentUser];
+let code = generateCode()
 
-    // Friend requests
-    const frList = document.getElementById('friendRequests');
-    frList.innerHTML = '';
-    user.friendRequests.forEach(f => {
-        const li = document.createElement('li');
-        li.innerText = f;
-        const btn = document.createElement('button');
-        btn.innerText = 'Accept';
-        btn.onclick = () => acceptFriend(f);
-        li.appendChild(btn);
-        frList.appendChild(li);
-    });
-
-    // Friends list
-    const fList = document.getElementById('friendsList');
-    fList.innerHTML = '';
-    user.friends.forEach(f => {
-        const li = document.createElement('li');
-        li.innerText = f;
-
-        const chatBtn = document.createElement('button');
-        chatBtn.innerText = 'Chat';
-        chatBtn.onclick = () => openChat(f);
-        chatBtn.style.marginRight = '5px';
-
-        const delBtn = document.createElement('button');
-        delBtn.innerText = 'Delete';
-        delBtn.style.backgroundColor = '#f44336';
-        delBtn.onclick = () => deleteFriend(f);
-
-        li.appendChild(chatBtn);
-        li.appendChild(delBtn);
-        fList.appendChild(li);
-    });
+users[u] = {
+password:p,
+code:code,
+friends:[],
+requests:[]
 }
 
-function sendFriendRequest() {
-    const code = document.getElementById('friendCodeInput').value.trim();
-    let found = false;
+save()
 
-    for (let user in users) {
-        if (users[user].code === code && user !== currentUser) {
-            users[user].friendRequests.push(currentUser);
-            saveData();
-            showMsg(`Friend request sent to ${user}`, 'success', 'friendMsg');
-            found = true;
-            break;
-        }
-    }
-    if (!found) showMsg('Code not found', 'error', 'friendMsg');
+showMsg("signupMsg","Account created!","green")
+
+document.getElementById("signupBox").style.display="none"
 }
 
-function acceptFriend(friend) {
-    users[currentUser].friends.push(friend);
-    users[friend].friends.push(currentUser);
-    users[currentUser].friendRequests = users[currentUser].friendRequests.filter(f => f !== friend);
-    saveData();
-    loadUserData();
+function login(){
+
+let u=document.getElementById("loginUser").value.trim()
+let p=document.getElementById("loginPass").value.trim()
+
+if(!users[u]){
+showMsg("loginMsg","User not found")
+return
 }
 
-function deleteFriend(friend) {
-    if (!confirm(`Are you sure you want to remove ${friend} from your friends?`)) return;
-    users[currentUser].friends = users[currentUser].friends.filter(f => f !== friend);
-    if (users[friend]) {
-        users[friend].friends = users[friend].friends.filter(f => f !== currentUser);
-    }
-    saveData();
-    showMsg(`${friend} removed from friends`, 'success', 'friendMsg');
-    loadUserData();
+if(users[u].password !== p){
+showMsg("loginMsg","Wrong password")
+return
 }
 
-// ======== DELETE ACCOUNT ========
-function deleteAccount() {
-    if (!currentUser) return showMsg('No user logged in', 'error', 'friendMsg');
-    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+currentUser=u
+localStorage.setItem("currentUser",u)
 
-    delete users[currentUser];
-
-    for (let user in users) {
-        users[user].friends = users[user].friends.filter(f => f !== currentUser);
-        users[user].friendRequests = users[user].friendRequests.filter(f => f !== currentUser);
-    }
-
-    for (let chatId in chats) {
-        if (chatId.includes(currentUser)) delete chats[chatId];
-    }
-
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('chats', JSON.stringify(chats));
-    localStorage.removeItem('currentUser');
-    currentUser = null;
-
-    showMsg('Account deleted successfully!', 'success', 'friendMsg');
-    location.reload();
+openMain()
 }
 
-// ======== CHAT ========
-function openChat(friend) {
-    localStorage.setItem('chatFriend', friend);
-    window.location.href = 'chat.html';
+function forgotPassword(){
+
+let u=prompt("Enter your username")
+
+if(!users[u]){
+alert("User not found")
+return
 }
 
-// Chat page logic
-if (window.location.pathname.endsWith('chat.html')) {
-    const chatBox = document.getElementById('chatBox');
-    const friend = localStorage.getItem('chatFriend');
-    currentUser = localStorage.getItem('currentUser');
-    document.getElementById('friendName').innerText = friend;
-    const chatId = [currentUser, friend].sort().join('_');
-    if (!chats[chatId]) chats[chatId] = [];
+alert("Your password is: "+users[u].password)
+}
 
-    function renderChat() {
-        chatBox.innerHTML = '';
-        chats[chatId].forEach((m, index) => {
-            const p = document.createElement('p');
-            p.className = 'message';
-            p.innerText = `${m.sender}: ${m.text}`;
+function logout(){
 
-            if (m.sender !== currentUser) p.classList.add('friend');
+localStorage.removeItem("currentUser")
+location.href="index.html"
 
-            if (m.sender === currentUser) {
-                const btn = document.createElement('button');
-                btn.innerText = '🗑';
-                btn.style.marginLeft = '10px';
-                btn.style.fontSize = '12px';
-                btn.onclick = () => deleteMessage(index);
-                p.appendChild(btn);
-            }
+}
 
-            chatBox.appendChild(p);
-        });
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
+function openMain(){
 
-    window.sendMessage = function() {
-        const input = document.getElementById('messageInput');
-        const text = input.value.trim();
-        if (!text) return;
-        chats[chatId].push({ sender: currentUser, text });
-        saveData();
-        input.value = '';
-        renderChat();
-    }
+if(!document.getElementById("mainUI")) return
 
-    function deleteMessage(index) {
-        chats[chatId].splice(index, 1);
-        saveData();
-        renderChat();
-    }
+document.getElementById("signupBox").style.display="none"
+document.getElementById("loginBox").style.display="none"
+document.getElementById("mainUI").style.display="block"
 
-    renderChat();
+document.getElementById("welcomeText").innerText="Logged in as "+currentUser
+document.getElementById("myCode").innerText=users[currentUser].code
 
-    // Auto-refresh every 1 second
-    setInterval(() => {
-        chats = JSON.parse(localStorage.getItem('chats') || '{}');
-        renderChat();
-    }, 1000);
+loadFriends()
+}
+
+function sendFriendRequest(){
+
+let code=document.getElementById("friendCodeInput").value.trim()
+
+let target=null
+
+for(let u in users){
+if(users[u].code === code){
+target=u
+break
+}
+}
+
+if(!target){
+showMsg("friendMsg","Code not found")
+return
+}
+
+if(target === currentUser){
+showMsg("friendMsg","You cannot add yourself")
+return
+}
+
+if(users[currentUser].friends.includes(target)){
+showMsg("friendMsg","Already friends")
+return
+}
+
+users[target].requests.push(currentUser)
+
+save()
+
+showMsg("friendMsg","Friend request sent","green")
+}
+
+function loadFriends(){
+
+let req=document.getElementById("requestsList")
+let fr=document.getElementById("friendsList")
+
+if(!req || !fr) return
+
+req.innerHTML=""
+fr.innerHTML=""
+
+users[currentUser].requests.forEach(r=>{
+
+let li=document.createElement("li")
+li.innerText=r
+
+let b=document.createElement("button")
+b.innerText="Accept"
+
+b.onclick=()=>acceptFriend(r)
+
+li.appendChild(b)
+req.appendChild(li)
+
+})
+
+users[currentUser].friends.forEach(f=>{
+
+let li=document.createElement("li")
+li.innerText=f
+
+let chat=document.createElement("button")
+chat.innerText="Chat"
+chat.onclick=()=>openChat(f)
+
+let del=document.createElement("button")
+del.innerText="Delete"
+del.onclick=()=>deleteFriend(f)
+
+li.appendChild(chat)
+li.appendChild(del)
+
+fr.appendChild(li)
+
+})
+}
+
+function acceptFriend(friend){
+
+users[currentUser].friends.push(friend)
+users[friend].friends.push(currentUser)
+
+users[currentUser].requests =
+users[currentUser].requests.filter(x=>x!==friend)
+
+save()
+
+loadFriends()
+}
+
+function deleteFriend(friend){
+
+users[currentUser].friends =
+users[currentUser].friends.filter(f=>f!==friend)
+
+users[friend].friends =
+users[friend].friends.filter(f=>f!==currentUser)
+
+save()
+
+loadFriends()
+}
+
+function openChat(friend){
+
+localStorage.setItem("chatFriend",friend)
+window.location="chat.html"
+
+}
+
+function goBack(){
+window.location="index.html"
+}
+
+if(window.location.pathname.endsWith("chat.html")){
+
+let friend = localStorage.getItem("chatFriend")
+currentUser = localStorage.getItem("currentUser")
+
+document.getElementById("chatFriendName").innerText = friend
+
+let box=document.getElementById("chatBox")
+
+let chatId=[currentUser,friend].sort().join("_")
+
+if(!chats[chatId]) chats[chatId]=[]
+
+function render(){
+
+box.innerHTML=""
+
+chats[chatId].forEach((m,i)=>{
+
+let div=document.createElement("div")
+
+div.className="bubble"
+
+if(m.sender === currentUser){
+div.classList.add("me")
+}
+
+div.innerText = m.sender + ": " + m.text
+
+if(m.sender === currentUser){
+
+let del=document.createElement("button")
+del.innerText="🗑"
+
+del.onclick=()=>{
+chats[chatId].splice(i,1)
+save()
+render()
+}
+
+div.appendChild(del)
+
+}
+
+box.appendChild(div)
+
+})
+
+box.scrollTop = box.scrollHeight
+}
+
+window.sendMessage=function(){
+
+let input=document.getElementById("messageInput")
+
+let text=input.value.trim()
+
+if(!text) return
+
+chats[chatId].push({
+sender:currentUser,
+text:text
+})
+
+save()
+
+input.value=""
+
+render()
+
+}
+
+render()
+
+setInterval(()=>{
+
+chats = JSON.parse(localStorage.getItem("chats") || "{}")
+render()
+
+},1000)
+
+}
+
+if(currentUser){
+openMain()
 }
