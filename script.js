@@ -34,6 +34,38 @@ function login() {
     loadUserData();
 }
 
+function deleteAccount() {
+    if (!currentUser) return alert('No user logged in');
+    if (!confirm('Are you sure you want to delete your account? This cannot be undone.')) return;
+
+    // 1. Remove user from users object
+    delete users[currentUser];
+
+    // 2. Remove this user from friends lists and friendRequests of other users
+    for (let user in users) {
+        users[user].friends = users[user].friends.filter(f => f !== currentUser);
+        users[user].friendRequests = users[user].friendRequests.filter(f => f !== currentUser);
+    }
+
+    // 3. Remove all chats that involve this user
+    for (let chatId in chats) {
+        if (chatId.includes(currentUser)) {
+            delete chats[chatId];
+        }
+    }
+
+    // 4. Save changes to localStorage
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('chats', JSON.stringify(chats));
+    localStorage.removeItem('currentUser');
+    currentUser = null;
+
+    alert('Account deleted successfully!');
+
+    // Reload page to show signup/login again
+    location.reload();
+}
+
 // Load friend requests and friends
 function loadUserData() {
     if (!currentUser) return;
