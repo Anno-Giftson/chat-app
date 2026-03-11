@@ -125,6 +125,14 @@ if (window.location.pathname.endsWith('chat.html')) {
     chatBox.scrollTop = chatBox.scrollHeight;
 }
 
+function deleteMessage(index) {
+    if (confirm('Are you sure you want to delete this message?')) {
+        chats[chatId].splice(index, 1); // remove message from array
+        localStorage.setItem('chats', JSON.stringify(chats)); // save updated chats
+        renderChat(); // re-render chat instantly
+    }
+}
+
     window.sendMessage = function() {
         const input = document.getElementById('messageInput');
         const text = input.value.trim();
