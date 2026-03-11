@@ -111,6 +111,11 @@ if (window.location.pathname.endsWith('chat.html')) {
         p.className = 'message';
         p.innerText = `${m.sender}: ${m.text}`;
 
+        // Add friend class for messages from the other person
+        if (m.sender !== currentUser) {
+            p.classList.add('friend');
+        }
+
         // Only show delete button for messages sent by currentUser
         if (m.sender === currentUser) {
             const btn = document.createElement('button');
