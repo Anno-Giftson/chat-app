@@ -7,8 +7,12 @@
 </head>
 <body>
 <h1>Chat with <span id="friendName"></span></h1>
-<div id="chatBox" style="border:1px solid #000;height:300px;overflow:auto;padding:5px"></div>
-<input id="messageInput" placeholder="Type a message">
+
+<div class="chat-container">
+    <div id="chatBox"></div>
+    <input id="messageInput" placeholder="Type a message">
+    <button onclick="sendMessage()">Send</button>
+</div>
 <button onclick="sendMessage()">Send</button>
 
 <script src="script.js"></script>
