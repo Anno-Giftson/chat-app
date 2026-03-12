@@ -77,7 +77,15 @@ setTimeout(()=>el.innerText="",4000)
 }
 
 function generateCode(){
-return Math.random().toString(36).substring(2,8).toUpperCase()
+
+let code
+
+do{
+code = Math.random().toString(36).substring(2,8).toUpperCase()
+}
+while(Object.values(users).some(u => u.code === code))
+
+return code
 }
 
 function signup(){
@@ -193,9 +201,16 @@ showMsg("friendMsg","Already friends")
 return
 }
 
+if(users[target].requests.includes(currentUser)){
+showMsg("friendMsg","Request already sent")
+return
+}
+
 users[target].requests.push(currentUser)
 
 save()
+
+document.getElementById("friendCodeInput").value=""
 
 showMsg("friendMsg","Friend request sent","green")
 }
@@ -248,8 +263,13 @@ fr.appendChild(li)
 
 function acceptFriend(friend){
 
+if(!users[currentUser].friends.includes(friend)){
 users[currentUser].friends.push(friend)
+}
+
+if(!users[friend].friends.includes(currentUser)){
 users[friend].friends.push(currentUser)
+}
 
 users[currentUser].requests =
 users[currentUser].requests.filter(x=>x!==friend)
